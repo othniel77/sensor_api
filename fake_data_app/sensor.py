@@ -61,7 +61,7 @@ if __name__ == "__main__":
     queried_date = date(year, month, day)
 
     capteur = VisitSensor(1500, 150)
-    capteur2 = VisitSensor(1500, 150)
+    capteur2 = VisitSensor(2000, 150)
     print(capteur.get_visit_count(queried_date))
     print(capteur2.get_visit_count(queried_date))
     # python sensor.py > log.txt
