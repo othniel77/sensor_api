@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+from datetime import date
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+import logging
+from fake_data_app import create_app
+
+store_dict = create_app()
+app = FastAPI()
+
+
+@app.get("/")
+def visit(
+    store_name: str, year: int, month: int, day: int, sensor_id: int | None = None
+) -> JSONResponse:
+    if not (store_name in store_dict.keys()):
+        return JSONResponse(status_code=404, content="Store Not found")
+
+    if sensor_id and (sensor_id > 7 or sensor_id < 0):
+        return JSONResponse(
+            status_code=404, content="Sensor_id should be between 0 and 7"
+        )
+
+    if year < 2019:
+        return JSONResponse(status_code=404, content="No data before 2019")
+
+    try:
+        requested_date = date(year, month, day)
+    except ValueError as e:
+        logging.error(f"Could not cast date: {e} ")
+        return JSONResponse(status_code=404, content="Enter a valid date")
+
+    if date.today() < requested_date:
+        return JSONResponse(status_code=404, content="Choose a date inthe past")
+
+    if sensor_id is None:
+        visit_counts = store_dict[store_name].get_all_traffic(requested_date)
+    else:
+        visit_counts = store_dict[store_name].get_sensor_traffic(
+            sensor_id, requested_date
+        )
+
+    if visit_counts < 0:
+        return JSONResponse(
+            status_code=404, content="The store was closed try another date"
+        )
+
+    return JSONResponse(status_code=200, content=visit_counts)
